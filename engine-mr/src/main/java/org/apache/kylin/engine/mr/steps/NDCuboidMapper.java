@@ -114,6 +114,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         Pair<Integer, ByteArray> result;
         for (Long child : myChildren) {
             Cuboid childCuboid = Cuboid.findForMandatory(cubeDesc, child);
+            //构建key
             result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
             outputKey.set(result.getSecond().array(), 0, result.getFirst());
             context.write(outputKey, value);

@@ -31,9 +31,10 @@ import com.google.common.collect.Lists;
 
 /**
  * Defines a cuboid tree, rooted by the base cuboid. A parent cuboid generates its child cuboids.
+ * 定义一个长方体树，它的根是基长方体。父长方体生成子长方体
  */
 abstract public class CuboidScheduler {
-    
+
     public static CuboidScheduler getInstance(CubeDesc cubeDesc) {
         String clzName = cubeDesc.getConfig().getCuboidScheduler();
         try {
@@ -43,24 +44,24 @@ abstract public class CuboidScheduler {
             throw new RuntimeException(e);
         }
     }
-    
+
     // ============================================================================
-    
+
     final protected CubeDesc cubeDesc;
-    
+
     protected CuboidScheduler(CubeDesc cubeDesc) {
         this.cubeDesc = cubeDesc;
     }
 
     /** Returns all cuboids on the tree. */
     abstract public Set<Long> getAllCuboidIds();
-    
+
     /** Returns the number of all cuboids. */
     abstract public int getCuboidCount();
-    
+
     /** Returns the child cuboids of a parent. */
     abstract public List<Long> getSpanningCuboid(long parentCuboid);
-    
+
     /** Returns a valid cuboid that best matches the request cuboid. */
     abstract public long findBestMatchCuboid(long requestCuboid);
 
@@ -68,7 +69,7 @@ abstract public class CuboidScheduler {
     abstract public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg);
 
     // ============================================================================
-    
+
     private transient List<List<Long>> cuboidsByLayer;
 
     public long getBaseCuboidId() {
@@ -125,10 +126,10 @@ abstract public class CuboidScheduler {
     public int getBuildLevel() {
         return getCuboidsByLayer().size() - 1;
     }
-    
+
     /** Returns the key for what this cuboid scheduler responsible for. */
     public String getCuboidCacheKey() {
         return cubeDesc.getName();
     }
-    
+
 }

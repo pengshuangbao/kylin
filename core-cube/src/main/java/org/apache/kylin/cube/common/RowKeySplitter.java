@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.common;
 
@@ -30,6 +30,9 @@ import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.model.TblColRef;
 
+/**
+ * rowkey 分割器
+ */
 public class RowKeySplitter implements java.io.Serializable {
 
     private CubeDesc cubeDesc;
@@ -65,6 +68,7 @@ public class RowKeySplitter implements java.io.Serializable {
     public RowKeySplitter(CubeSegment cubeSeg) {
         this(cubeSeg, cubeSeg.getCubeDesc().getRowkey().getRowKeyColumns().length + 2, cubeSeg.getConfig().getDimensionEncodingMaxLength());
     }
+
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
@@ -93,17 +97,21 @@ public class RowKeySplitter implements java.io.Serializable {
         int offset = enableSharding ? RowConstants.ROWKEY_SHARDID_LEN : 0;
         return Bytes.toLong(bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
     }
+
     /**
      * @param bytes
      * @return cuboid ID
      */
     public long split(byte[] bytes) {
+        //缓存索引位置
         this.bufferSize = 0;
+        //当前这个字节数组的偏移量
         int offset = 0;
 
         if (enableSharding) {
             // extract shard
             ByteArray shardSplit = new ByteArray(bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);
+            //将shard byte array 放入到 缓存郑总
             this.splitBuffers[this.bufferSize++] = shardSplit;
             offset += RowConstants.ROWKEY_SHARDID_LEN;
             //lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
@@ -112,9 +120,12 @@ public class RowKeySplitter implements java.io.Serializable {
 
         // extract cuboid id
         ByteArray cuboidIdSplit = new ByteArray(bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
+        //存入cuboidid
         this.splitBuffers[this.bufferSize++] = cuboidIdSplit;
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
+        //这里取出这个cuboid的long值
         long lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.array(), cuboidIdSplit.offset(), RowConstants.ROWKEY_CUBOIDID_LEN);
+        //获取cuboid的实例
         Cuboid cuboid = Cuboid.findForMandatory(cubeDesc, lastSplittedCuboidId);
 
         // rowkey columns
@@ -123,10 +134,11 @@ public class RowKeySplitter implements java.io.Serializable {
             TblColRef col = cuboid.getColumns().get(i);
             int colLength = colIO.getColumnLength(col);
             ByteArray split = new ByteArray(bytes, offset, colLength);
+            //拿到具体列的byte
             this.splitBuffers[this.bufferSize++] = split;
             offset += colLength;
         }
-
+        //最后返回这个cuboidid
         return lastSplittedCuboidId;
     }
 }

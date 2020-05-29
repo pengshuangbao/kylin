@@ -99,12 +99,17 @@ public class NDCuboidBuilder implements Serializable {
         long childCuboidId = childCuboid.getId();
         //这里取的事这个parentCuboid的位的长度，比如上面这个返回的就是25
         long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
-        //这里取的
+        //这里取的，其实是维度从第几位开始的坐标，比如跳过 cuboid那一位，如果使用了shard，那还得跳过shard这一位。
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
+        //跳过的位的长度
         int offset = RowConstants.ROWKEY_SHARDID_LEN + RowConstants.ROWKEY_CUBOIDID_LEN; // skip shard and cuboidId
+        //遍历parentCuboid这么多遍
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
+            //按照位与，比如开始的时候 mask是 1000000000000000000000000
+            // parentCuboid是1111000000000000000000000，则结果就是1000000000000000000000000，大于0
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
-                // 1
+                // mask与子cuboid按位与，比如此时 如果 子cuboid是 1111000000000000000000000，结果就是 1000000000000000000000000，大于0，而这个时候index是第一位
+                // 所以这里就需要包括第一位了，也就是这个rowkey中，是需要包括这个位的数据了，下面用数组拷贝，将这个位的数据拷贝到newKeyBodyBuf中去了
                 if ((mask & childCuboidId) > 0) {// if the child cuboid has this
                     // column
                     System.arraycopy(splitBuffers[index].array(), splitBuffers[index].offset(), newKeyBodyBuf.array(), offset, splitBuffers[index].length());
@@ -112,9 +117,10 @@ public class NDCuboidBuilder implements Serializable {
                 }
                 index++;
             }
+            //右移一位,就是由1000000000000000000000000变成了100000000000000000000000
             mask = mask >> 1;
         }
-
+        //将shard和cuboid填充到数组前面
         rowkeyEncoder.fillHeader(newKeyBodyBuf.array());
     }
 
