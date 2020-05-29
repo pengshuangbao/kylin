@@ -56,9 +56,10 @@ public class NDCuboidBuilder implements Serializable {
 
     /**
      * Build the new key, return a reused ByteArray object. Suitable for MR
+     * 构建新key，返回一个重用的ByteArray对象。适用于MR
      * @param parentCuboid
      * @param childCuboid
-     * @param splitBuffers
+     * @param splitBuffers 这个就是一个每个维度的值的byte数组
      * @return
      */
     public Pair<Integer, ByteArray> buildKey(Cuboid parentCuboid, Cuboid childCuboid, ByteArray[] splitBuffers) {
@@ -92,10 +93,13 @@ public class NDCuboidBuilder implements Serializable {
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
 
         // rowkey columns
+        //取只留最高的那个位的long值，比如1111000000000000000000000，就变成了1000000000000000000000000
         long mask = Long.highestOneBit(parentCuboid.getId());
         long parentCuboidId = parentCuboid.getId();
         long childCuboidId = childCuboid.getId();
+        //这里取的事这个parentCuboid的位的长度，比如上面这个返回的就是25
         long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
+        //这里取的
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         int offset = RowConstants.ROWKEY_SHARDID_LEN + RowConstants.ROWKEY_CUBOIDID_LEN; // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {

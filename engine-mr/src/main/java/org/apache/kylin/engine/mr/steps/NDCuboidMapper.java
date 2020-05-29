@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author George Song (ysong1)
- * 
+ * 多维度构建 Mapper类
+ *
  */
 public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
@@ -58,6 +59,10 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private int handleCounter;
     private int skipCounter;
 
+    /**
+     *主要负责从map中的key中分割出long类型的cuboid值
+     *并且设置每个维度的值到splitBuffers中
+     */
     private RowKeySplitter rowKeySplitter;
 
     private NDCuboidBuilder ndCuboidBuilder;
